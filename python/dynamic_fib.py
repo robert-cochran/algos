@@ -16,10 +16,10 @@ def fib_rec(n):
     else:
         #we can produce the fibonacci number at pos n if we know what the number is at pos n-1 and pos n-2
         #this self referencing works as long as there are conditions to catch it 
-        return(fib_slow(n-1) + fib_slow(n-2))
+        return(fib_rec(n-1) + fib_rec(n-2))
 
 #Fast Fib takes advantage of the fact that a lot of redundant work is created when doing the recursive method
-def fib_fast(n):
+def fib_dyn(n):
     mem = [0,1]
     # mem[0] = 0
     # mem[1] = 1
@@ -39,12 +39,21 @@ def fib_fast(n):
 if __name__ == "__main__":
     position = int(input("Type a number for the related fibonacci number: "))
     
-    # begin = time.time()
-    fib_n = fib_rec(position)
-    # end = time.time()
-    # timed = end-begin
-    print(f"the fib number at position {position} is {fib_n}")
+    begin_rec = time.time()
+    fib_rec = fib_rec(position)
+    end_rec = time.time()
+    time_rec = end_rec - begin_rec
+    print(f"the fib number at position {position} is {fib_rec}")
 
-    fib_n_f = fib_fast(position)
+    begin_dyn = time.time()
+    fib_dyn = fib_dyn(position)
+    end_dyn = time.time()
+    time_dyn = end_dyn - begin_dyn
     # print(f"this took {time} seconds to compute using non-dynamic programming")
-    print(f"fast fib is {fib_n_f}")
+    print(f"the fib at position {position} is {fib_dyn}")
+    
+
+    print(f"the time it took to recursively compute this was {time_rec:0.4f}s")
+    print(f"the time it took to dynamically compute this was {time_dyn:0.4f}s")
+
+    
