@@ -84,4 +84,7 @@ if __name__ == "__main__":
     queue = [start_node]
     
     print(graph.bfs(start_node, end_node))
+
+    print("PRINT PATH NOT WORKING")
+
     print(graph.print_path(start_node, end_node, [start_node], [start_node], []))

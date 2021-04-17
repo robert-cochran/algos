@@ -1,0 +1,225 @@
+PseudoCode
+
+Input:	Set<Location> locations,
+	 	Location source, int ts,
+		Location destination, int td,
+		List<Delivery> deliveries
+
+Output: int
+
+minimumCostFinder(){
+
+
+	int minimumCost = -1
+	int currentRouteCost = -1
+	int shortestRouteCost = -1;
+
+	Set<Vertex>> adjacencyList=
+		generateGraph(adjacencyList, sourceSet, deliveries);
+		//List<List<List<deliveries>>>
+		//TreeMap<Vertex,Set<Delv>>
+		//only the deliveries that CAN leave a location-arrival node
+
+		//Return:
+			//this would be ordered by the ordering of keyset of verticesMap
+			//{{d1,d3,d9}, {d1,d3,d9,d10,d2}}
+			//{d3,d1,d0,d10}
+			//{d2}
+
+		//I have a list of vertices (e.g. 1,{1,6,2}) and a list of edges (e.g. {d1,d3,d9})
+		//First list of edges is locations, then next is arrival, then next is deliveries
+
+		//need to detect or get rid of cycles so i dont get loop stuck if td-ts is really big
+
+	//why do we need priority queue?
+
+	//initialize Queue
+	PriorityQueue Q = new PriorityQueue(Vertex);
+	Q.add(new Vertex(Source, ts));
+	Vertex u;
+	while(Q.isEmpty()==false){
+		u = Q.pop();
+		locations.remove(u.source);
+		if (u.children.isEmpty() == false){
+			for (Vertex v : u.children){ //all destinations
+				Q.add(v);
+				if (Locations.contains(v.location) == false) {
+					//this means v from u is pointing to an already
+					//visited vertex
+					//{LEAVE THIS PLACE! OOOOWooooWOoWOOWowOWO}
+				}
+				if (v.dist() > (u.dist() + cost(u,v))){
+					dist[v] = dist[u] + cost(u,v);
+				}
+				if (v.location == DESTINATION){
+					if (shortestRouteCost > v.distance
+					|| shortestRouteCost != -1){
+						shortestRouteCost = v.distance;
+					}
+				}
+			}
+		}
+		else {
+			//either at destination or a dead end
+			//what if we pop a dead end node??
+			//node.dist = -1; or INF
+			if (v.destination == DESTINATION){
+
+			}
+			else {
+				//this is a sink, dist = -1?
+			}
+		}
+	return shortestRouteCost;
+	}
+}
+
+
+generateGraph(adjacencyList, sourceSet, deliveries, SOURCE){
+//get vertices
+	Vertex sourceVertex = new Vertex(SOURCE.getIdentifier(), ts);
+	adjacencyList.add(sourceVertex);
+	//mergeSort needed at all?
+
+	//add destination vertices and starting vertex
+	//collection of all vertices
+		//removes selfloops
+		//removes deliveries to SOURCE
+		//removes deliveries from DESTINATION
+		//adds SOURCE deliveries to sourceSet
+	//Set<Delivery> sourceSet = new Set<Delivery>();
+	for (Delivery delivery : deliveries){
+		if (delivery.source != delivery.destination
+		|| delivery.destination == SOURCE
+		|| delivery.source == DESTINATION)
+			{deliveries.remove(delivery);}
+				//removes selfloops, any deliveries conflicting with
+				//head as source and tail and destination
+		else{
+			adjacencyList.add(
+				new Vertex(delivery.destination,delivery.arrival));
+		}
+	}
+
+	//collection of all eligable children of vertices
+	/**Invariant- */
+	for (Delivery delivery: deliveries){
+		for (Vertex vertex : vertices){
+			//source and valid deliveries will pass this
+			if (delivery.source.getIdentifier() == vertex.location
+			&& vertx.arrival <= delivery.departure){
+				vertex.children.add(delivery);
+				//Set<Delivery> adjacentV = adjacencyList.get(v);
+				//adjacencyV.add(d);
+				//adjacencyList.put(v,adjacencyV);
+				if (delivery.source == SOURCE){
+					vertex.distance = 0;
+				}
+			}
+		}
+	}
+	topologicalSort(vertices, adjacencyList);
+}
+
+//sorts the adjacencyList to make finding shortest path easier?
+		//does this purely remove loops?
+		//so am i removing deliveries that cause loops?
+		//topologicalSort(adjacencyList);
+
+		//needs source, destination, and children of vertices to find
+		private static void topologicalSort(
+				HashSet<Vertex> adjacencyList, List<Delivery> deliveries, Set<Location>locations, Location SOURCE){
+				//initial implementation will be recursive
+			//for source, this will determine what deliveries can leave source
+			//only destinations in locations will be added
+			//remove source from locations
+			//mark all children of source, all children will have parent marked as SOURCE
+				//only direct descendants get marked, so no later quicker route can include them
+			//next vertex -adjacent to u
+			//check if any adjacent verticies reference a vertex with a parent, remove those deliveries
+				//cant have anyone referencing it
+				//cant be random
+				//should probably be same order i will traverse in
+				//
+
+			//removing SOURCE, what vertices have no parents?? that is what we move to next!!!!
+			//actually we want the vertices with parents, right?
+			//what do vertices have initially? no parents right?
+				//which is why we want to remove cycles
+				//everything that SOURCE references becomes a child
+				//anything else that references that child is a loop
+				//we can remove those deliveries
+			//so this would be a tree essentially?
+
+			//if nothing is leaving a node, and that node is not DESTINATION
+				//then we can remove that node from the sort
+					//would
+				//also remove from LOCATIONS?
+
+			//Source.parent(none);
+//				int i = 0;
+//				Source.u.d = i++;
+//				Source as Start
+//				for (Vertex child: source.adjacent){
+//					child.discovered = i++;
+//					child.parent(source);
+//					topologicalSort(vertices, deliveries,
+//						locations-sourceLocation, child);
+//
+//				}
+//				Source.u.f = i++;
+		}
+
+
+private class Vertex implements Comparable<Vertex>{
+	int finished;
+	int discovered;
+	int distance;
+	int location;
+	int arrival;
+	int parent;
+	Set<Delivery> children;
+
+	Vertex(int location, int arrival){
+		this.location = location;
+		this.arrival = arrival;
+		this.finished = -1;
+		this.discovered = -1;
+		this.distance = -1;
+		this.parent = -1;
+		this.children = new Set<Delivery>();
+	}
+
+	@Override
+	private boolean equals(Object object) {
+		if (!(object instanceof Vertex)) {
+			return false;
+		}
+		Vertex other = (Vertex) object;
+		return (location == other.location
+		    && arrival == other.arrival;
+	}
+
+	@Override
+	private int hashCode() {
+		int locationHash = location+1000;
+		int arrivalHash = arrival+1000;
+		int vertexHash =
+			(.5)*(locHash + arrHash)*(locHash + arrHash + 1) + arr;
+	  	return vertexHash;
+		//alt: a >= b ? a * a + a + b : a + b * b;  where a, b >= 0
+	}
+
+	@Override
+	private int compareTo(Vertex o) {
+		if (!(object instanceof Vertex)) {
+			return false;
+		}
+		Vertex other = (Vertex) object;
+		if(this.location > other.location) {return 1;}
+		if(this.location < other.location) {return -1;}
+		if(this.arrival > other.arrival) {return 1;}
+		if(this.arrival < other.arrival) {return -1;}
+		else {return 0;}
+	}
+}

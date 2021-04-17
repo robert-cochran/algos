@@ -1,0 +1,352 @@
+package assignment1;
+
+import java.util.*;
+
+public class MinimumCostFinder {
+
+    /**
+     * @require The set of locations, locations, is not null and each location
+     *          in the set of locations is not null and has a unique identifier
+     *          in the range [0, locations.size()-1].
+     *
+     *          The set of locations contains the source and destination
+     *          locations, and those two locations are not equal.
+     *
+     *          The earliest time that the package can depart the source
+     *          location, ts, is non-negative (i.e. 0 <= ts). The latest time
+     *          that the package can arrive at the destination location, td, is
+     *          no earlier than ts (i.e. ts <= td).
+     *
+     *          The list of deliveries, deliveries, is not null, and for each
+     *          delivery x in the deliveries, the source and destination of x
+     *          are in the set of locations, and ts <= x.departure() <
+     *          x.arrival() <= td.
+     *
+     * @ensure Returns the minimum cost of any route from source to destination
+     *         that departs the source location no earlier than time ts, and
+     *         arrives at the destination location no later than time td, if at
+     *         least one such route exists. If no such route exists the
+     *         algorithm should return the distinguished value -1.
+     *
+     *         (See the assignment handout for details.)
+     */
+
+	/**
+	 *
+	 * @param locations
+	 * @param source
+	 * @param ts
+	 * @param destination
+	 * @param td
+	 * @param deliveries
+	 * @return
+	 */
+
+	 public static int findMinimumCost(
+			 			Set<Location> locations,
+	 					Location source, int ts,
+	 					Location destination, int td,
+	 					List<Delivery> deliveries) {
+
+		int minimumCostRoute = -1;
+		int minimumCurrentRouteCost = -1;
+
+		if (td == 0 || ts == td){return minimumCostRoute;}
+		//order deliveries
+		Delivery[] deliveryArray = deliverySort(deliveries, 0, deliveries.size());
+
+
+		//Set<Delivery>[] f = new Set<>[];
+
+		TreeMap<Integer, Set<Integer>> vertices = generateVertices(deliveries);
+
+		generateEdges(vertices,deliveries);
+
+
+    	//hash of this will be key to map deliveries to
+
+		for (Delivery startDelivery: deliveries){
+
+			if (startDelivery.source().equals(source)){
+
+				if (startDelivery.destination().equals(destination)){
+					minimumCurrentRouteCost = startDelivery.cost();
+				}
+				else {
+					minimumCurrentRouteCost = findRoute(locations, startDelivery.destination(),
+						startDelivery.arrival(), destination, td, deliveries, startDelivery.cost());
+				}
+					//does this ensure correctness here?
+				if (minimumCurrentRouteCost >= 0 &&
+						(minimumCurrentRouteCost < minimumCostRoute || minimumCostRoute == -1)){
+					minimumCostRoute = minimumCurrentRouteCost;
+				}
+
+			}
+
+		}
+		System.out.println("End");
+		return minimumCostRoute;
+	}
+
+
+	/**
+	 *
+	 * @param locations
+	 * @param source
+	 * @param ts
+	 * @param destination
+	 * @param td
+	 * @param deliveries
+	 * @param currentRouteCost
+	 * @return
+	 */
+	private static int findRoute(Set<Location> locations,
+				Location source, int ts,
+				Location destination, int td,
+				List<Delivery> deliveries, int currentRouteCost){
+
+		int minimumCostRoute = -1; //we want to return this
+		int minimumCurrentRouteCost = -1; //use this as temp to check against current
+
+
+		for (Delivery nextDelivery: deliveries){
+
+
+			if (nextDelivery.source().equals(source)
+					&& ts <= nextDelivery.departure()) {
+
+				if (nextDelivery.destination().equals(destination)){
+					minimumCurrentRouteCost = currentRouteCost + nextDelivery.cost();
+				}
+				else {
+					//this will return the cheapest possible route from the graph for the given delivery
+					minimumCurrentRouteCost = currentRouteCost + nextDelivery.cost();
+					minimumCurrentRouteCost = findRoute(locations,
+							nextDelivery.destination(), nextDelivery.arrival(),
+							destination, td, deliveries, minimumCurrentRouteCost);
+				}
+
+				if (minimumCurrentRouteCost >= 0 &&
+						(minimumCurrentRouteCost < minimumCostRoute || minimumCostRoute == -1)){
+					minimumCostRoute = minimumCurrentRouteCost;
+				}
+			}
+
+		}
+
+		return minimumCostRoute;
+	}
+
+	/**
+	 *
+	 * @param deliveries
+	 * @param low
+	 * @param hi
+	 * @return
+	 */
+	public static Delivery[] deliverySort(List<Delivery> deliveries, int low, int hi){
+		Iterator<Delivery> it = deliveries.iterator();
+		Delivery[] deliveryArray = new Delivery[deliveries.size()];
+		int i = 0;
+		while (it.hasNext()) {
+			deliveryArray[i++] = it.next();
+		}
+		dSort(deliveryArray, 0, deliveryArray.length-1);
+		for (int i1 = 0; i1 < deliveries.size(); i1++) {
+        	System.out.println(deliveryArray[i1]);
+        }
+		return deliveryArray;
+	}
+
+	/**
+	 *
+	 * @param deliveries
+	 * @param low
+	 * @param hi
+	 */
+	private static void dSort(Delivery[] deliveries, int low, int hi) {
+		int mid;
+		//System.out.println("high " + hi);
+		if (low < hi) {
+			 mid = (hi+low)/2;
+			 dSort(deliveries, low, mid);
+			 //System.out.println(low + " " +   mid + " " + hi);
+			 dSort(deliveries, mid + 1, hi);
+			 merge(deliveries, low, mid, hi);
+
+		}
+	}
+
+	/**
+	 *
+	 * @param deliveries
+	 * @param lo
+	 * @param mid
+	 * @param hi
+	 */
+	private static void merge(Delivery[] deliveries, int lo, int mid, int hi) {
+		int i, j;
+		List<Delivery> tempList = new LinkedList<Delivery>();
+		/* A = A0 && ordered(A[lo..mid]) && ordered(A[mid+1..hi]) */
+		i = lo;
+		j = mid + 1;
+		/*
+		 * While both segments are non-empty select the least element and add to
+		 * the list.
+		 */
+		while ((i <= mid) && (j <= hi)) {
+			//stats.incrCompare();
+			//stats.incrMove();
+			if (deliveries[i].source().identifier()
+					<= deliveries[j].source().identifier()) {
+				tempList.add(deliveries[i]);
+				i = i + 1;
+			} else {
+				tempList.add(deliveries[j]);
+				j = j + 1;
+			}
+		}
+		/* Move any elements left in the first segment to the list. */
+		while (i <= mid) {
+			//stats.incrMove();
+			tempList.add(deliveries[i]);
+			i = i + 1;
+		}
+		/*
+		 * Move any elements left in the second segment to the list. Note that
+		 * only one of this while loop and the one above actually do anything.
+		 */
+		while (j <= hi) {
+			//stats.incrMove();
+			tempList.add(deliveries[j]);
+			j = j + 1;
+		}
+		/* Place the merged elements in the list back into the array. */
+		for (i = lo; i <= hi; i++) {
+			//stats.incrMove();
+			deliveries[i] = tempList.remove(0);
+		}
+		/*
+		 * ordered(A[lo..hi]) && items(A) = items(A0) && (A[0..lo-1] =
+		 * A0[0..lo-1]) && (A[hi+1..HIGH(A)] = A0[hi+1..HIGH(A)])
+		 */
+	}
+
+
+
+	/**
+	 *
+	 * @param tm
+	 * @param deliveries
+	 */
+	private static TreeMap<Integer, Set<Integer>> generateVertices(
+			List<Delivery> deliveries){
+
+		//tm holds a Location and a set of arrivals for that location
+		TreeMap<Integer, Set<Integer>> vertices = new TreeMap<Integer, Set<Integer>>();
+		//s holds a set of arrivals
+		Set<Integer> arrivalsForALocation = new HashSet<Integer>();
+
+
+		for (int i = 0; i < deliveries.size(); i++) {
+			//grabs ith delivery
+			Delivery delivery = deliveries.get(i); //mnight be slow for linked list, d^2 slow
+			//grabs ith deliveries destination
+			int location = delivery.destination().identifier();
+			//grabs ith deliveries arrival
+			int arrival = delivery.arrival();
+			if (vertices.containsKey(location)) {
+				arrivalsForALocation = vertices.get(location);
+			}
+			//else {arrivalsForLocation.;}
+			arrivalsForALocation.add(arrival);
+			vertices.put(location, arrivalsForALocation);
+		}
+
+		//testing TreeMap
+				Set<Integer> s = vertices.keySet();
+		    	Iterator<Integer> it = s.iterator();
+		    	while (it.hasNext()){
+		    		Integer dest = it.next();
+		    		System.out.println(it.next());
+		    		Set<Integer> arrivals = vertices.get(dest);
+		    		for (Integer arrival : arrivals) {
+		    			System.out.println(arrival);
+		    		}
+		    	}
+
+    	return vertices;
+
+	}
+
+	private static void generateEdges(
+			TreeMap<Integer, Set<Integer>> vertices, List<Delivery> deliveries) {
+
+		//for each combination of location to its arrival
+			//find the deliveries which CAN be delivered to that location
+			//attach that delivery to a set
+		Iterator<Integer> locationIterator = vertices.keySet().iterator();
+		//every i is a location
+		while (locationIterator.hasNext()) {
+			int location = locationIterator.next();
+			Set<Integer> arrivals = vertices.get(location);
+			for (int arrival : arrivals) {
+				//need to combine arrival with location to form unique hash
+				//hash will be key for graph map
+				//key will map to all deliveries that can be at location at arrival
+
+				//how will i make it unique??
+				//cost and location can be the same
+				int prime = 7;
+				int result = location;
+				int arrivalHash = 13*arrival;
+				result = prime*result + arrival;
+				int arrivalHash = 97*arrival;
+				int vertexHash = locationHash * 7 + arrivalHash;
+			}
+
+			for (int i = 0; i < arrivals.size(); i++) {
+				int arrival = arrivals.
+
+				Set<Integer> arrivals = vertices.get(i);
+
+
+			}
+		}
+
+	}
+
+	/*private class locationArrivalVertex {
+		private final int location;
+		private final int arrival;
+
+		private locationArrivalVertex(int location, int arrival){
+			this.location = location;
+			this.arrival = arrival;
+		}
+
+		@Override
+	    public boolean equals(Object object) {
+	        if (!(object instanceof Delivery)) {
+	            return false;
+	        }
+	        Delivery other = (Delivery) object;
+	        return (source.equals(other.source)
+	                && destination.equals(other.destination)
+	                && departure == other.departure && arrival == other.arrival
+	                && cost == other.cost);
+	    }
+
+	    @Override
+	    public int hashCode() {
+	        int prime = 7;
+	        int result = source.hashCode();
+	        result = prime * result + destination.hashCode();
+	        result = prime * result + departure;
+	        result = prime * result + arrival;
+	        result = prime * result + cost;
+	        return result;
+	    }
+	}*/
+}

@@ -1,0 +1,61 @@
+PseudoCode Algorithm
+
+Input:
+
+	DELIVERIES
+	LOCATIONS
+	
+	SOURCE
+	TS
+	DESTINATION
+	TD
+	
+Output:
+	
+	lowest cost route applicable within given parameters
+	else, -1
+
+minimumCostFinder(...)
+
+	DELIVERIES, LOCATIONS
+	SOURCE, TS
+	DESTINATION, TD
+	
+	Set minimumCostRoute, minimumCurrentRouteCost to -1
+	
+	For each Delivery
+		if delivery.source == SOURCE
+			if delivery.destination == DESTINATION
+				minimumCurrentRouteCost = delivery.cost
+			else
+				minimumCurrentRouteCost = findRoute(...) 
+			check currentRouteCost against minimumCostRoute
+				set minimumCostRoute if (greater than mincurrentRouteCost) or (not set yet)
+				
+	return minimumCost
+
+
+Input: ...
+
+Output: ...
+
+findRoute(...)
+
+	set minimumCostRoute, newRouteCost to -1
+	
+	for each delivery
+		if delivery.source == SOURCE && ts <= delivery.departure 
+		//make sure that delivery can be performed
+			if delivery.desination == DESTINATION
+				currentRouteCost = currentRouteCost + delivery.cost
+			else
+				currentRouteCost = findRoute(...)
+				//dont like this name
+			
+			check currentRouteCost to minimumCostRoute
+				set if minimumCostRoute == -1 or cur < min
+	return minimumCostRoute
+		
+		
+		
+		

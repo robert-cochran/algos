@@ -1,0 +1,467 @@
+
+
+package assignment1;
+
+import java.util.*;
+
+public class MinimumCostFinder {
+
+    /**
+     * @require The set of locations, locations, is not null and each location
+     *          in the set of locations is not null and has a unique identifier
+     *          in the range [0, locations.size()-1].
+     *
+     *          The set of locations contains the source and destination
+     *          locations, and those two locations are not equal.
+     *
+     *          The earliest time that the package can depart the source
+     *          location, ts, is non-negative (i.e. 0 <= ts). The latest time
+     *          that the package can arrive at the destination location, td, is
+     *          no earlier than ts (i.e. ts <= td).
+     *
+     *          The list of deliveries, deliveries, is not null, and for each
+     *          delivery x in the deliveries, the source and destination of x
+     *          are in the set of locations, and ts <= x.departure() <
+     *          x.arrival() <= td.
+     *
+     * @ensure Returns the minimum cost of any route from source to destination
+     *         that departs the source location no earlier than time ts, and
+     *         arrives at the destination location no later than time td, if at
+     *         least one such route exists. If no such route exists the
+     *         algorithm should return the distinguished value -1.
+     *
+     *         (See the assignment handout for details.)
+     */
+
+	/**
+	 *
+	 * Runtime - O(m^3 log m)
+	 *
+	 * Space complexity - O(m^2)
+	 *
+	 * Accepts a list of deliveries and finds the shortest route within
+	 * 		the parameters given for start and end time/location
+	 *
+	 * @param locations
+	 * @param source
+	 * @param ts
+	 * @param destination
+	 * @param td
+	 * @param deliveries
+	 * @return
+	 */
+
+	 public static int findMinimumCost(
+ 			Set<Location> locations,
+			Location source, int ts,
+			Location destination, int td,
+			List<Delivery> deliveries) {
+
+		//Runtime: n - locations, m - deliveries
+		int shortestRouteCost = -1;
+		Vertex sourceVertex;
+
+		/** Space complexity - O(m^2) */
+		Map<Vertex,TreeMap<Vertex,Delivery>> adjacencyList =
+				new TreeMap<Vertex,TreeMap<Vertex,Delivery>>();
+
+
+		/** Runtime - O(m^3 log m) */
+		/** Invariant - */
+		//generate Graph (TreeMap of vertices to a TreeMap of their adjacencyList)
+		//S = {}; VISITED == FALSE
+		generateGraph(locations, deliveries, source, ts, destination, adjacencyList);
+
+		/** Runtime - O(m) */
+		//INTIALIZE QUEUE
+		PriorityQueue<Vertex> unvisitedQueue =
+				new PriorityQueue<Vertex>(500, new CostComparator());
+		initializeQueue(unvisitedQueue, adjacencyList.keySet());
+
+		//adjacencyList.get(new Vertex(190, 24000)).containsKey(new Vertex(190, 24000));
+
+
+
+
+		/** Runtime - O(m log m) = O(log m) + O(log m) + O(m log m)*/
+		//WHILE Q IS NOT EMPTY
+		while(unvisitedQueue.isEmpty()==false){
+
+			/** Runtime - O(log m) */
+			//DO U <- EXTRACT.MIN(Q)
+			sourceVertex = unvisitedQueue.remove();
+			//S <- S u {u}
+			sourceVertex.visited = true;
+
+			/** Runtime - O(log m) */
+			TreeMap<Vertex,Delivery> sourceAdjList =
+					adjacencyList.get(sourceVertex);
+
+
+			/** Runtime - O(m log m) = m * O(log m) */
+			for (Vertex adjacentVertex : sourceAdjList.keySet()) {
+				if (adjacentVertex.visited == false) {
+
+					/** Runtime - O(log m) = log(m) + log(m)*/
+					if (unvisitedQueue.contains(adjacentVertex) == false) {
+						unvisitedQueue.add(adjacentVertex);
+					}
+
+					/** Runtime - O(log m) */
+					Delivery adjDelivery = sourceAdjList.get(adjacentVertex);
+
+					/** Runtime - O(log m)*/
+					//RELAX
+					if (adjacentVertex.cost > (sourceVertex.cost + adjDelivery.cost())) {
+						//then d[v] <- d[u] + w(u,v)
+						adjacentVertex.cost = sourceVertex.cost + adjDelivery.cost();
+
+						/** Runtime - O(log m) */
+						unvisitedQueue.remove(adjacentVertex);
+						/** Runtime - O(log m) */
+						unvisitedQueue.add(adjacentVertex);
+					}
+					if (adjacentVertex.locationIdentifier == destination.identifier()) {
+						if (shortestRouteCost
+								> sourceVertex.cost + adjDelivery.cost()
+								|| shortestRouteCost == -1) {
+							shortestRouteCost = (int) (sourceVertex.cost + adjDelivery.cost());
+						}
+					}
+
+				}
+
+			}
+
+		}
+		return shortestRouteCost;
+	}
+
+	 /**
+	  * Runtime - O(m)
+	  * @param queue
+	  * @param vertices
+	  */
+	 private static void initializeQueue(
+			 PriorityQueue<Vertex> queue,
+			 Set<Vertex> vertices) {
+
+		//Finds the source vertex (with cost 0)
+		for (Vertex vertex : vertices) {
+			if (vertex.cost == 0.0) {
+				queue.add(vertex);
+			}
+		}
+	 }
+
+	/**
+	 *
+	 * Runtime - O(m^3 log m)
+	 *
+	 * Generates the adjacency list for the graph
+	 *
+	 * @param deliveries
+	 * @param SOURCE
+	 * @param ts
+	 * @param DESTINATION
+	 * @return
+	 */
+	private static Map<Vertex,TreeMap<Vertex,Delivery>> generateGraph(
+			Set<Location> locations,
+			List<Delivery>deliveries,
+			Location SOURCE, int ts,
+			Location DESTINATION,
+			Map<Vertex,TreeMap<Vertex,Delivery>> adjacencyList){
+
+		/** Runtime - O(m  + m log m)*/
+		/** Space Complexity - O(m) */
+		/** INVARIANT - */
+		//Populates adjacencyList with vertices
+		generateVertices(adjacencyList, deliveries, SOURCE, ts, DESTINATION);
+
+		/** Runtime - O(m^3 log m)*/
+		/** Space complexity - O(m * m) */
+		/** INVARIANT - */
+		//Populates adjacencyList with all eligible deliveries (i.e. deliveries)
+			//for each vertex
+		generateEdges(deliveries, SOURCE, ts, DESTINATION, adjacencyList);
+
+		//Runtime = O(m)
+		TreeSet<Integer>[] allLocationArrivals = new TreeSet[locations.size()];
+
+		//runtime - m
+		for (int i = 0; i < allLocationArrivals.length; i++) {
+			allLocationArrivals[i] = new TreeSet<Integer>();
+		}
+
+		//runtime = m
+		for (Delivery delivery : deliveries) {
+			TreeSet<Integer> locationArrivals = allLocationArrivals[delivery.destination().identifier()];
+			locationArrivals.add(delivery.arrival());
+			//lookup, add runtimes? log n for Tree, 1 for linked
+			//need to remove duplicates
+			//need to have order??
+
+		}
+
+		//runtime - m^2 n log m
+		for (Delivery delivery : deliveries){
+			Set<Vertex> sourceVertices = new TreeSet<Vertex>();
+
+			//mn log m
+			for (int i = 0; i < locations.size(); i++) {
+				TreeSet<Integer> locationArrivals = allLocationArrivals[i];
+
+				//m * log m
+				for (Integer arrival : locationArrivals) {
+					if (arrival < delivery.departure()){
+
+						//log m
+						sourceVertices.add(new Vertex(i, arrival));
+					}
+				}
+
+			}
+
+			//m log m
+			for (Vertex sourceVertex : sourceVertices) {
+				Vertex destinationVertex =
+						new Vertex(delivery.destination().identifier(), delivery.arrival());
+				//log m
+				if (adjacencyList.containsKey(destinationVertex)) {
+					if (adjacencyList.get(destinationVertex).containsKey(sourceVertex)) {
+						if (adjacencyList.get(destinationVertex).get(sourceVertex).cost() > delivery.cost()) {
+							adjacencyList.get(destinationVertex).put(sourceVertex, delivery);
+						}
+					}
+				}
+				//log m
+				else {
+					TreeMap<Vertex,Delivery> treeMap = new TreeMap<Vertex, Delivery>();
+					treeMap.put(sourceVertex, delivery);
+					adjacencyList.put(destinationVertex, treeMap);
+				}
+
+			}
+
+
+		}
+
+		/** Runtime - */
+		//Turns directed cyclic graph into a DAG
+		//stronglyConnectedComponents();
+
+		/** Runtime - */
+		//Sorts a DAG
+		//topoSort();
+
+		/** Runtime - O(m^3 log m) = O(m^3 log m) + O(m + log m) */
+		return adjacencyList;
+	}
+
+	private static boolean deliveryBoundsCheck(
+			Delivery delivery,
+			List<Delivery> remove,
+			Location SOURCE,
+			Location DESTINATION){
+		if (delivery.source().equals(delivery.destination())
+				|| delivery.destination().equals(SOURCE)
+				|| delivery.source().equals(DESTINATION))
+			/** Runtime - O(1) */
+			{remove.add(delivery);
+			return true;}
+		return false;
+	}
+
+	/**
+	 *
+	 * Runtime - O(m + m log m)
+	 *
+	 * 		This worst case would be when deliveries are ALL invalid
+	 * 		Otherwise a O(m log m) runtime
+	 *
+	 * Produces a Map of all vertices that have a destination and time in some given delivery
+	 *
+	 * Maps to an empty adjList
+	 *
+	 * Vertex being represented as the destination and arrival of a given delivery from deliveries
+	 *
+	 * @param deliveries
+	 * @param SOURCE
+	 * @param ts
+	 * @param DESTINATION
+	 * @return
+	 */
+	private static void generateVertices(
+			Map<Vertex,TreeMap<Vertex,Delivery>> adjacencyList,
+			List<Delivery>deliveries,
+			Location SOURCE, int ts, Location DESTINATION) {
+
+		Vertex sourceVertex = new Vertex(SOURCE.identifier(), ts);
+		sourceVertex.cost = 0.0;
+		adjacencyList.put(sourceVertex,new TreeMap<Vertex,Delivery>());
+		List<Delivery> remove = new LinkedList<Delivery>();
+
+		/** Runtime - O(m log m) = m * O(log m) */
+		for (Delivery delivery : deliveries){
+			if (deliveryBoundsCheck(delivery, remove, SOURCE, DESTINATION)){}
+
+			/** Runtime - O(log m) */
+			else{adjacencyList.put(
+					new Vertex(delivery.destination().identifier(),delivery.arrival()),
+					new TreeMap<Vertex,Delivery>());
+			}
+		}
+
+		//** Runtime - O(m) (assuming LinkedList) */
+		//removes selfloops, deliveries to SOURCE, deliveries from DESTINATION
+		for (Delivery delivery : remove) {
+			deliveries.remove(delivery);
+		}
+
+	}
+
+	/**
+	 *
+	 * Runtime - O(m^3 log m)
+	 *
+	 * Returns verticesMap where each adjList for a given sourceVertex has A DIFFERENT destinationVertex mapped to A possible delivery
+	 *
+	 * 	Multiple deliveries from sourceVertex to destinationVertex may be present, only CHEAPEST will be saved
+	 *
+	 * INVARIANT - only deliveries which can be carried out by a vertex will be added to that vertex
+	 *
+	 * @param deliveries
+	 * @param SOURCE
+	 * @param ts
+	 * @param DESTINATION
+	 * @param vertices
+	 * @return
+	 */
+	private static void generateEdges(
+			List<Delivery>deliveries, Location SOURCE, int ts, Location DESTINATION,
+			Map<Vertex,TreeMap<Vertex,Delivery>> adjacencyList){
+
+		/** Runtime - O(m^3 log m) = m * O(m^2 log m)*/
+		for (Vertex sourceVertex : adjacencyList.keySet()){
+
+			/** Runtime - O(m^2 log m) = m * O(m log m)*/
+			for (Delivery adjacentDelivery : deliveries){
+				if (sourceVertex.locationIdentifier ==
+						adjacentDelivery.source().identifier()
+						&& sourceVertex.arrival <=adjacentDelivery.departure()){
+					Vertex destinationVertex =
+							new Vertex(adjacentDelivery.destination().identifier(),
+									adjacentDelivery.arrival());
+
+					/** Runtime - O(m log m) = m * O(log m)*/
+					for (Vertex findingDestinationVertex : adjacencyList.keySet()) {
+						if (destinationVertex.equals(findingDestinationVertex)) {
+							destinationVertex = findingDestinationVertex;
+
+							/** Runtime - O(log m) */
+							TreeMap<Vertex,Delivery> adjVertices = adjacencyList.get(sourceVertex);
+
+							/** Runtime - O(log m) = log m + log m */
+							if (adjVertices.containsKey(destinationVertex)) {
+								if (adjVertices.get(destinationVertex).cost() > adjacentDelivery.cost()) {
+
+									/** Runtime - Theta(log m)*/
+									adjVertices.put(destinationVertex, adjacentDelivery);
+								}
+							}
+							/** Runtime - Theta(log m)*/
+							else {adjVertices.put(destinationVertex, adjacentDelivery);}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Vertex represents how vertices are stored and used in MinimumCostFind
+	 * All vertices are generated from arrival times and destinations from all Deliveries
+	 * One vertex can hold many deliveries/adjacent vertices
+	 * Vertex only holds deliveries leaving this vertex
+	 * Duplicates are ignored
+	 * Only the cheapest of multiple deliveries between two distinct vertices will be saved
+	 * A vertices uniqueness is determined by the destination location all deliveries it holds arrive at
+	 * 		and the time it arrives there
+	 * The same delivery can be contained in multiple vertices
+	 *
+	 * Vertex is comparable so that it can be implemented in Tree's
+	 * @author Robert Cochran
+	 *
+	 */
+	private static class Vertex implements Comparable<Vertex>, Comparator<Vertex>{
+			Double cost;
+			int locationIdentifier;
+			int arrival;
+			boolean visited;
+
+			Vertex(int location, int arrival){
+				this.locationIdentifier = location;
+				this.arrival = arrival;
+				this.cost = Double.POSITIVE_INFINITY;
+				this.visited = false;
+			}
+
+			@Override
+			public boolean equals(Object object) {
+				if (!(object instanceof Vertex)) {
+					return false;
+				}
+				Vertex other = (Vertex) object;
+				return (locationIdentifier == other.locationIdentifier
+				    && arrival == other.arrival);
+			}
+
+			@Override
+			public int hashCode() {
+				int locationHash = locationIdentifier+1000;
+				int arrivalHash = arrival+1000;
+				int vertexHash =
+					(int) ((.5)*(locationHash + arrivalHash)*(locationHash + arrivalHash + 1) + arrivalHash);
+			  	return vertexHash;
+				//alt: a >= b ? a*a+a+b : a+b*b;  where a, b >= 0
+			}
+
+			@Override
+			public int compareTo(Vertex other) {
+				//Vertex other = (Vertex) object;
+				if(this.locationIdentifier > other.locationIdentifier) {return 1;}
+				if(this.locationIdentifier < other.locationIdentifier) {return -1;}
+				if(this.arrival > other.arrival) {return 1;}
+				if(this.arrival < other.arrival) {return -1;}
+				else {return 0;}
+			}
+
+			@Override
+			public int compare(Vertex v1, Vertex v2) {
+
+				//Vertex other = (Vertex) object;
+				if(v1.cost > v2.cost) {return 1;}
+				if(v1.cost < v2.cost) {return -1;}
+				else {return 0;}
+			}
+
+			@Override
+			public String toString() {
+				return ("(P" + this.locationIdentifier + "-Arr " + this.arrival + ")");
+			}
+
+		}
+
+
+	public static class CostComparator implements Comparator<Vertex> {
+		@Override
+		public int compare(Vertex v1, Vertex v2) {
+			if(v1.cost > v2.cost) {return 1;}
+			if(v1.cost < v2.cost) {return -1;}
+			else {return 0;}
+		}
+	}
+
+
+}

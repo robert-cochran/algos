@@ -1,0 +1,41 @@
+4.A - PseudoCode
+
+Pseudo - Findmincost
+Input: source, destination, ts, td, deliveries, locations
+Output: cheapestRouteCost
+
+	shortestRouteCost = -1;
+	adjList = GenerateGraph(source, destination, ts, td, deliveries);
+	Q = InitializeQueue();
+
+	while(unvisitedQ.notEmpty)
+		u = unvisitedQ.extractMin();
+		for (Vertex v : adjList(u).vertices())
+			if (v.visited == false){Q.add(v)};
+			if (v.cost > (u.cost + (u,v).cost))
+				v.cost = u.cost + (u,v).cost;
+			if (v.location == DESTINATION)
+				if (cheapestRouteCost > v.cost)
+					cheapestRouteCost=v.cost;
+	return cheapestRouteCost
+
+Pesudo - InitializeQueue
+Input: Q, adjList
+Output: void; Q now has sourceVertex
+
+	for (v : adjList).vertices()){
+		if (v.cost == 0)
+			Q.add(v)
+	}
+
+Pseudo - GenerateGraph
+Input: source, destination, ts, td, deliveries
+Output: void; adjList has been set up
+
+	adjList.addVertex(sourceV);
+	for (delivery : deliveries)
+		adjList.addVertex(Vertex(delivery.destination, delivery.arrival))
+	for (v : adjList.vertices())
+		for (delivery : deliveries)
+			if (v.canSend(delivery))
+				adjList.add(v,delivery)

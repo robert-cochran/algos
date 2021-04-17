@@ -1,0 +1,24 @@
+Overview of the projects
+Wanted to build more software projects like I did for 4500A1. Something thats challenging technically, can be modelled using CLRS algo knowledge, documented on runtime, and provides a technical spec sheet on what each project covers, offers/provides, guarantees, where it works, what can be improved, ...
+
+Related information that ties everything together or anything that would be beneficial to know about everything here
+
+
+Sites used to get ideas
+			http://nevonprojects.com/project-ideas/software-project-ideas/
+			https://en.wikipedia.org/wiki/List_of_artificial_intelligence_projects (HUGE bunch of ideas here)
+			https://www.elprocus.com/top-software-engineering-projects-for-it-and-cse-students-in-2014/
+			
+			
+keywords to google
+	challenging software projects
+	ai side projects
+	algorithms side projects (^ close to same?)
+the idea that sparked this 
+	(COMP4500 assignment 1)
+Interesting Libraries
+	https://developer.spotify.com/documentation/web-api/libraries/
+SoftwareTools
+	https://nulis.io/tree/welcome-tree
+Resources
+	https://github.com/jwasham/coding-interview-university
