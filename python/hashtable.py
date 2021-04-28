@@ -1,0 +1,1 @@
+# example https://github.com/keon/algorithms/blob/master/algorithms/map/hashtable.py
